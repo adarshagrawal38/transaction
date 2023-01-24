@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -105,13 +104,10 @@ func (e *Endpoint) AddTransaction(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	//fmt.Println("input: ", input)
-
+	
 	parsedData, err := parseInput(input)
 	if err != nil {
-		fmt.Println("error: ", err.Error())
 		if err.Error() == "transaction is older then 60 sec" {
-			fmt.Println("t1")
 			c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
 			return
 		} else {
@@ -120,7 +116,6 @@ func (e *Endpoint) AddTransaction(c *gin.Context) {
 
 		return
 	}
-	//fmt.Println(parsedData)
 	e.transactions = append(e.transactions, parsedData)
 	e.updateStats(parsedData)
 	c.JSON(http.StatusCreated, gin.H{"msg": "Transaction added"})
@@ -155,21 +150,17 @@ func parseInput(input map[string]string) (*Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Test", transaction)
-
+	
 	today := time.Now().UTC()
 
 	if transaction.timeStamp.Before(today) {
 		// in past
 		diff := today.Sub(transaction.timeStamp)
-		fmt.Println(diff)
 		if diff.Seconds() > float64(60) {
 			return nil, errors.New("transaction is older then 60 sec")
 		}
 	} else {
 		// time stamp future date
-		fmt.Println(transaction.timeStamp)
-		fmt.Println(today)
 		return nil, errors.New("transaction is in future date")
 	}
 
@@ -198,6 +189,4 @@ func (e *Endpoint) updateStats(tran *Transaction) {
 		s.Min = tran.amount
 	}
 	e.cityStats[key] = s
-	fmt.Println("key", s)
-	fmt.Println(e.cityStats)
 }
